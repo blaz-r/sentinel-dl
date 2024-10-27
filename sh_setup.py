@@ -12,8 +12,8 @@ def get_parser() -> argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--id', required=True, type=str, help='Client ID')
-    parser.add_argument('--secret', required=True, type=str, help='Client Secret')
+    parser.add_argument("--id", required=True, type=str, help="Client ID")
+    parser.add_argument("--secret", required=True, type=str, help="Client Secret")
 
     return parser
 
@@ -35,5 +35,5 @@ def main() -> None:
         print(f"Failed to save sentinel-dl profile: {traceback.format_exc()}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -23,3 +23,13 @@ python sh_setup.py --id <insert ClientID here> --secret <insert ClinetSecret her
 This config will be later used when you use the `eolearn` functionalities to download the data.
 
 ### Data downloading
+
+
+### Developing
+
+Use ruff formater and Google docstring format for development.
+
+To format run:
+```bash
+ruff format .
+```
