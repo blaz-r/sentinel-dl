@@ -1,6 +1,5 @@
 from pathlib import Path
 import geopandas as gpd
-from matplotlib import pyplot as plt
 from sentinelhub import UtmZoneSplitter
 import numpy as np
 from shapely import Polygon
@@ -19,9 +18,9 @@ def prepare_slo_shape() -> gpd.geoseries.GeoSeries:
     return slo
 
 
-def prepare_slo_chunks(resolution=10, patch_size=512):
+def prepare_slo_chunks(resolution=10, patch_size=512) -> gpd.GeoDataFrame:
     # TODO check how resolution works exactly
-    #assert patch_size % resolution == 0, "Patch size must be divisible by resolution."
+    # assert patch_size % resolution == 0, "Patch size must be divisible by resolution."
 
     slo = prepare_slo_shape()
 
@@ -36,8 +35,10 @@ def prepare_slo_chunks(resolution=10, patch_size=512):
     idxs_x = [info["index_x"] for info in info_list]
     idxs_y = [info["index_y"] for info in info_list]
 
-    bbox_gdf = gpd.GeoDataFrame({"index": idxs, "index_x": idxs_x, "index_y": idxs_y}, crs=slo.crs,
-                                geometry=geometry)
+    bbox_gdf = gpd.GeoDataFrame(
+        {"index": idxs, "index_x": idxs_x, "index_y": idxs_y},
+        crs=slo.crs,
+        geometry=geometry,
+    )
 
-    return bbox_gdf
-
+    return bbox_gdf, bbox_list
