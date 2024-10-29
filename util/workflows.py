@@ -1,3 +1,4 @@
+import numpy as np
 from eolearn.core import (
     FeatureType,
     SaveTask,
@@ -6,9 +7,10 @@ from eolearn.core import (
     EOExecutor,
 )
 from eolearn.io import SentinelHubInputTask
-from sentinelhub import DataCollection, SHConfig
+from sentinelhub import DataCollection, SHConfig, BBox
 
-def prepare_dl_workflow(
+
+def prepare_workflow(
     out_dir: str,
     config: SHConfig,
     data_collection: DataCollection = DataCollection.SENTINEL2_L1C,
@@ -16,14 +18,27 @@ def prepare_dl_workflow(
     resolution: int = 10,
     maxcc: float = 0.8,
 ):
-    # size?
+    """
+    Prepare Eo-learn workflow used to download the patches.
+
+    Args:
+        out_dir: path to root dir for patch files.
+        config: sentinel hub config.
+        data_collection: type of data that will be downloaded.
+        bands: bands to download. If set to None, all bands will be downloaded.
+        resolution: resolution in meters.
+        maxcc: max cloud cover ratio
+
+    Returns:
+        workflow and dictionary containing map to input and saving node, later used to set arguments
+    """
     input_task = SentinelHubInputTask(
         data_collection=data_collection,
         bands=bands,
         bands_feature=(FeatureType.DATA, "data"),
         additional_data=[(FeatureType.MASK, "dataMask")],  # cloud mask
         maxcc=maxcc,
-        resolution=resolution,
+        resolution=resolution,  # fix this here, since based on bbox sizes the output in pixels might not match directly.
         config=config,  # important since we are using sentinel-dl, alternatively save ID and secret to default profile
     )
 
@@ -37,21 +52,52 @@ def prepare_dl_workflow(
     return workflow, node_map
 
 
+def simple_idx2name(idx: int, bbox: BBox, time: tuple) -> str:
+    """
+    Simple formatter for patch file names to set name to patch_idx.
+
+    Args:
+        idx: index used in name
+        bbox: ignored
+        time: ignored
+
+    Returns:
+        string with file name
+    """
+    return f"patch_{idx}"
+
+
 def execute_flow(
     workflow: EOWorkflow,
-    node_map: dict,
-    bbox_list: list,
-    num_workers: int,
+    bbox_list: np.ndarray,
     time_interval: tuple,
-):
+    node_map: dict,
+    file_name_formatter: callable = simple_idx2name,
+    num_workers: int = 4,
+) -> None:
+    """
+    Execute download workflow for given bboxes.
+
+    Args:
+        workflow: download workflow
+        bbox_list: list of bboxes to be downloaded
+        time_interval: time interval of interest
+        node_map: used to set arguments for workflow nodes
+        file_name_formatter: function used to generate patch file name
+        num_workers: number of processes used
+
+    Returns:
+        None
+    """
     execution_args = []
 
-    # TODO - naming convention?
     for idx, bbox in enumerate(bbox_list):
         execution_args.append(
             {
                 node_map["input"]: {"bbox": bbox, "time_interval": time_interval},
-                node_map["save"]: {"eopatch_folder": f"patch_{idx}"},
+                node_map["save"]: {
+                    "eopatch_folder": file_name_formatter(idx, bbox, time_interval)
+                },
             }
         )
         if idx == 0:
