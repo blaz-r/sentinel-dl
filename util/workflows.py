@@ -7,7 +7,7 @@ from eolearn.core import (
     EOExecutor,
 )
 from eolearn.io import SentinelHubInputTask
-from sentinelhub import DataCollection, SHConfig, BBox
+from sentinelhub import DataCollection, SHConfig, BBox, MosaickingOrder
 
 
 def prepare_workflow(
@@ -17,6 +17,8 @@ def prepare_workflow(
     bands: list[str] = None,
     resolution: int = 10,
     maxcc: float = 0.8,
+    single_scene: bool = True,
+    mosaicking_order: MosaickingOrder = MosaickingOrder.LEAST_CC,
 ):
     """
     Prepare Eo-learn workflow used to download the patches.
@@ -28,6 +30,8 @@ def prepare_workflow(
         bands: bands to download. If set to None, all bands will be downloaded.
         resolution: resolution in meters.
         maxcc: max cloud cover ratio
+        single_scene: mosaic the image into single image, based on least cloud coverage.
+        mosaicking_order: order of mosaicking for single_scene image, refer to MosaickingOrder and docs for more info.
 
     Returns:
         workflow and dictionary containing map to input and saving node, later used to set arguments
@@ -38,6 +42,8 @@ def prepare_workflow(
         bands_feature=(FeatureType.DATA, "data"),
         additional_data=[(FeatureType.MASK, "dataMask")],  # cloud mask
         maxcc=maxcc,
+        single_scene=single_scene,
+        mosaicking_order=mosaicking_order,
         resolution=resolution,  # fix this here, since based on bbox sizes the output in pixels might not match directly.
         config=config,  # important since we are using sentinel-dl, alternatively save ID and secret to default profile
     )
@@ -70,7 +76,7 @@ def simple_idx2name(idx: int, bbox: BBox, time: tuple) -> str:
 def execute_flow(
     workflow: EOWorkflow,
     bbox_list: np.ndarray,
-    time_interval: tuple,
+    time_interval: list,
     node_map: dict,
     file_name_formatter: callable = simple_idx2name,
     num_workers: int = 4,
@@ -100,8 +106,10 @@ def execute_flow(
                 },
             }
         )
-        if idx == 0:
+        if idx == 15:
             break
+
+    print("Starting workflow execution.")
 
     executor = EOExecutor(workflow, execution_args, save_logs=True, logs_folder="./log")
     executor.run(workers=num_workers)
@@ -114,3 +122,5 @@ def execute_flow(
             f"Execution failed EOPatches with IDs:\n{failed_ids}\n"
             f"For more info check report at {executor.get_report_path()}"
         )
+
+    print("Saving successful for all patches.")
