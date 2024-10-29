@@ -30,9 +30,16 @@ To download data for the entire Slovenian region, run `main.py`:
 python main.py --date 29-10-2024
 ```
 
-This will download patches with a single temporal dimension for the entire country of Slovenia. 
+This will download Sentinel2 L1C patches with a single temporal dimension and all 13 bands for the entire country of Slovenia
+Patches will be saved as EOPatch inside `./patches/<date>`. The report of execution will be saved inside `./log`.
 
-The service assembles a **single image** from tiles recorded in last month from given `date`.
+With default resolution and patch size, there is about 900 patches, totaling in about 5GB for a single run.
+
+---
+
+Sentinel makes a recording around every 5 days. 
+To get a single best image for each patch, the code assembles a **single image** from tiles recorded in last month ending on a given `date`.
+With default settings, this is done by taking the least cloudy sample and mosaicking that into a single image.
 The `date` is also the only required argument.
 
 Use `python main.py -h` to get help on other arguments.
@@ -40,7 +47,7 @@ Use `python main.py -h` to get help on other arguments.
 ### Resolution (resolution), resolution (size) and resolution (bbox size).
 Sounds as confusing as it is...
 
-> In EOlearn API, `resolution` refers to sentinel sampling resolution in meters (default 10m). 
+In EOlearn API, `resolution` refers to sentinel sampling resolution in meters (default 10m). 
 Size refers to resolution of patch in pixels (default 512). 
 Then bbox also contains "edge size" in meters of earth covered (default is resolution * patch_size -> 5120 x 5120 m).
 
@@ -55,7 +62,7 @@ because this will default to 256x256 (as that is the size if you sample 5120m wi
 Now one can try this: specify 5120m sided bbox and set size to 512px (but you can't also specify resolution). 
 This then yields 512x512 res just fine, but it doesn't say which sampling resolution it uses (probably 10). 
 
-This is not a problem with default options: resolution of 10m, and patch size of 512. Each patch is therefore 512x512 and covers 5120 x 5120 m.
+> This is not a problem with default options: resolution of 10m, and patch size of 512. Each patch is therefore 512x512 and covers 5120 x 5120 m.
 
 ### Developing
 
@@ -65,3 +72,5 @@ To format run:
 ```bash
 ruff format .
 ```
+
+There is also some experimental code inside `experimental.ipynb`, `resolution_exp.ipynb` and `time.ipynb`.

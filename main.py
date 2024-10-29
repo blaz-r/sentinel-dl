@@ -26,28 +26,28 @@ def get_parser():
         required=False,
         type=int,
         default=512,
-        help="Output patch pixel resolution.",
+        help="Output patch pixel resolution (Default is 512px)",
     )
     parser.add_argument(
         "--maxcc",
         required=False,
         type=float,
         default=0.2,
-        help="Max cloud coverage ratio.",
+        help="Max cloud coverage ratio (Default is 0.2)",
     )
     parser.add_argument(
         "--mosaicing_order",
         required=False,
         type=MosaickingOrder,
         default=MosaickingOrder.LEAST_CC,
-        help="Mosaicking order to asemble single image.",
+        help="Mosaicking order to asemble single image (Default is LEAST_CC - least cloud coverage)",
     )
     parser.add_argument(
         "--num_workers",
         required=False,
         type=int,
         default=8,
-        help="Number of processes.",
+        help="Number of processes (default is 8)",
     )
 
     return parser
@@ -60,8 +60,13 @@ def main() -> None:
     start_date = args.date
 
     collection = DataCollection.SENTINEL2_L1C
+
+    # load from config file
     config = SHConfig("sentinel-dl")
+
+    # prepare Slovenia map and chunk it into patches of resolution*patch_size m^2
     _, bbox_list = prepare_slo_chunks(resolution=resolution, patch_size=args.patch_size)
+    # prepare workflow
     workflow, node_map = prepare_workflow(
         out_dir=f"./patches/{start_date}",
         config=config,
@@ -70,8 +75,10 @@ def main() -> None:
         maxcc=args.maxcc,
     )
 
+    # get interval [date - month, date]
     time_of_interest = get_last_month_span(start_date)
 
+    # execute workflow downloading in parallel with given setup
     execute_flow(
         workflow=workflow,
         node_map=node_map,

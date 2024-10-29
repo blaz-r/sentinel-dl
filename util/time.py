@@ -34,6 +34,15 @@ def get_last_two_timestamps(
 
 
 def get_last_month_span(timestamp: str) -> list:
+    """
+    Get time interval from timestamp - 1 month to timestamp.
+
+    Args:
+        timestamp: end date
+
+    Returns:
+        list[date - 1month, date]
+    """
     date = datetime.strptime(timestamp, "%d-%m-%Y")
 
     month_ago = date - relativedelta(months=1)
