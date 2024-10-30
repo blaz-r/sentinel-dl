@@ -1,6 +1,6 @@
 # Sentinel DL
 
-### Env
+## Env
 
 ```bash
 conda create -n sentinel_env python=3.10
@@ -9,7 +9,7 @@ conda activate sentinel_env
 pip install -r requirements
 ```
 
-### SentinelHub config
+## SentinelHub config
 
 In order to download data from SentinelHub, you need to setup the API credentials used with `sentinelhub` library.
 
@@ -22,7 +22,7 @@ python sh_setup.py --id <insert ClientID here> --secret <insert ClinetSecret her
 
 This config will be later used when you use the `eolearn` functionalities to download the data.
 
-### Data downloading
+## Data downloading
 
 To download data for the entire Slovenian region, run `main.py`:
 
@@ -44,7 +44,11 @@ The `date` is also the only required argument.
 
 Use `python main.py -h` to get help on other arguments.
 
-### Resolution (resolution), resolution (size) and resolution (bbox size).
+## Simple visualisation
+
+To visualise the downloaded data, you can use the provided `visualise.ipynb` which visualises a region around Ljubljana.
+
+## Resolution (resolution), resolution (size) and resolution (bbox size).
 Sounds as confusing as it is...
 
 In EOlearn API, `resolution` refers to sentinel sampling resolution in meters (default 10m). 
@@ -64,7 +68,9 @@ This then yields 512x512 res just fine, but it doesn't say which sampling resolu
 
 > This is not a problem with default options: resolution of 10m, and patch size of 512. Each patch is therefore 512x512 and covers 5120 x 5120 m.
 
-### Developing
+## Developing
+
+### Format and code style
 
 Use ruff formater and Google docstring format for development.
 
@@ -72,5 +78,15 @@ To format run:
 ```bash
 ruff format .
 ```
+
+### Docs and guides
+
+Some nice guides are available here:
+[eolearn sentinelhub io](https://github.com/sentinel-hub/eo-learn/blob/master/examples/io/SentinelHubIO.ipynb).
+[eolearn landcover](https://github.com/sentinel-hub/eo-learn/blob/master/examples/land-cover-map/SI_LULC_pipeline.ipynb).
+
+also useful are [eoleran docs](https://eo-learn.readthedocs.io/en/latest/) and [sentinelhub docs](https://docs.sentinel-hub.com/api/latest/).
+
+### Experimental
 
 There is also some experimental code inside `experimental.ipynb`, `resolution_exp.ipynb` and `time.ipynb`.
