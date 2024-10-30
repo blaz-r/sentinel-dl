@@ -4,7 +4,7 @@ from datetime import datetime
 from sentinelhub import DataCollection, SHConfig, MosaickingOrder
 
 from util.workflows import prepare_workflow, execute_flow
-from util.region import prepare_slo_chunks
+from util.region import prepare_slo_chunks, validate_data_exists
 from util.time import get_last_two_timestamps, get_last_month_span
 
 
@@ -77,6 +77,15 @@ def main() -> None:
 
     # get interval [date - month, date]
     time_of_interest = get_last_month_span(start_date)
+
+    # check that data exist for given interval and cloud coverage, raise exception if not
+    validate_data_exists(
+        bbox_list,
+        interval=time_of_interest,
+        collection=collection,
+        config=config,
+        maxcc=args.maxcc,
+    )
 
     # execute workflow downloading in parallel with given setup
     execute_flow(

@@ -1,8 +1,10 @@
 from pathlib import Path
 import geopandas as gpd
-from sentinelhub import UtmZoneSplitter
+from sentinelhub import UtmZoneSplitter, BBox, DataCollection, SHConfig
 import numpy as np
+from sentinelhub.api.catalog import get_available_timestamps
 from shapely import Polygon
+from tqdm import tqdm
 
 
 def prepare_slo_shape(patch_size=512) -> gpd.geoseries.GeoSeries:
@@ -77,3 +79,45 @@ def prepare_slo_chunks(
     )
 
     return bbox_gdf, bbox_list
+
+
+def validate_data_exists(
+    bboxes: np.ndarray,
+    interval: tuple,
+    collection: DataCollection,
+    config: SHConfig,
+    maxcc: float,
+):
+    """
+    Validate that data exists for given bbox, collection, interval and max cloud coverage.
+    Raise exception if any patches don't have cloud coverage.
+
+    Useful in case of high cloud coverage.
+
+    Args:
+        bbox: region of interest
+        interval: time of interest
+        collection: data type used
+        config: sentinel hub config
+        maxcc: maximum cloud coverage ratio
+
+    Returns:
+        None
+    """
+    nodata_ids = []
+
+    print("Verifying that data exists for given interval and cloud coverage.")
+    for i, bbox in tqdm(enumerate(bboxes), desc="Verifying", total=len(bboxes)):
+        ts = get_available_timestamps(
+            bbox=bbox,
+            time_interval=interval,
+            data_collection=collection,
+            config=config,
+            maxcc=maxcc,
+        )
+        if not ts:
+            nodata_ids.append(i)
+
+    if nodata_ids:
+        msg = f"Data with maxcc of {maxcc} not available for IDs: {nodata_ids}."
+        raise RuntimeError(msg)
