@@ -95,7 +95,7 @@ def validate_data_exists(
     Useful in case of high cloud coverage.
 
     Args:
-        bbox: region of interest
+        bboxes: list of regions of interest
         interval: time of interest
         collection: data type used
         config: sentinel hub config
@@ -106,7 +106,9 @@ def validate_data_exists(
     """
     nodata_ids = []
 
-    print("Verifying that data exists for given interval and cloud coverage.")
+    print(
+        f"Verifying that data exists for given interval {interval} and cloud coverage of {maxcc}."
+    )
     for i, bbox in tqdm(enumerate(bboxes), desc="Verifying", total=len(bboxes)):
         ts = get_available_timestamps(
             bbox=bbox,

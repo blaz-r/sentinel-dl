@@ -27,7 +27,7 @@ This config will be later used when you use the `eolearn` functionalities to dow
 To download data for the entire Slovenian region, run `main.py`:
 
 ```bash
-python main.py --date 29-10-2024
+python main.py --date 29.10.2024
 ```
 
 This will download Sentinel2 L1C patches with a single temporal dimension and all 13 bands for the entire country of Slovenia
@@ -37,12 +37,12 @@ With default resolution and patch size, there is about 900 patches, totaling in 
 
 ---
 
-Sentinel makes a recording around every 5 days. 
+Sentinel makes a recording every 5 days but due to overlap some regions of Slovenia make 2 recordings in 5 days. 
 To get a single best image for each patch, the code assembles a **single image** from tiles recorded in last month ending on a given `date`.
 With default settings, this is done by taking the least cloudy sample and mosaicking that into a single image.
 The `date` is also the only required argument.
 
-Use `python main.py -h` to get help on other arguments.
+Use `python main.py -h` to get help on other arguments: [date, save_dir, resolution, patch_size, maxcc, mosaicking_order, num_workers].
 
 ## Simple visualisation
 

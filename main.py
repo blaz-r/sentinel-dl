@@ -12,7 +12,13 @@ def get_parser():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--date", required=True, type=str, default=10, help="Date of interest."
+        "--date", required=True, type=str, help="Date of interest in format: d.m.Y."
+    )
+    parser.add_argument(
+        "--save_dir",
+        type=str,
+        default="./patches",
+        help="Root dir of where patches will be saved.",
     )
     parser.add_argument(
         "--resolution",
@@ -36,7 +42,7 @@ def get_parser():
         help="Max cloud coverage ratio (Default is 0.2)",
     )
     parser.add_argument(
-        "--mosaicing_order",
+        "--mosaicking_order",
         required=False,
         type=MosaickingOrder,
         default=MosaickingOrder.LEAST_CC,
@@ -66,9 +72,11 @@ def main() -> None:
 
     # prepare Slovenia map and chunk it into patches of resolution*patch_size m^2
     _, bbox_list = prepare_slo_chunks(resolution=resolution, patch_size=args.patch_size)
+
+    dir_name = start_date.replace(".", "-")
     # prepare workflow
     workflow, node_map = prepare_workflow(
-        out_dir=f"./patches/{start_date}",
+        out_dir=f"{args.save_dir}/{dir_name}",
         config=config,
         resolution=resolution,
         data_collection=collection,

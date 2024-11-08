@@ -43,7 +43,7 @@ def get_last_month_span(timestamp: str) -> list:
     Returns:
         list[date - 1month, date]
     """
-    date = datetime.strptime(timestamp, "%d-%m-%Y")
+    date = datetime.strptime(timestamp, "%d.%m.%Y")
 
     month_ago = date - relativedelta(months=1)
 
