@@ -1,10 +1,11 @@
 import argparse
 from datetime import datetime
+from pathlib import Path
 
 from sentinelhub import DataCollection, SHConfig, MosaickingOrder
 
 from util.workflows import prepare_workflow, execute_flow
-from util.region import prepare_slo_chunks, validate_data_exists
+from util.region import validate_data_exists, prepare_chunks
 from util.time import get_last_two_timestamps, get_last_month_span
 
 
@@ -13,6 +14,12 @@ def get_parser():
 
     parser.add_argument(
         "--date", required=True, type=str, help="Date of interest in format: d.m.Y."
+    )
+    parser.add_argument(
+        "--geojson_path",
+        type=str,
+        default="data/svn_border.geojson",
+        help="Path to geojson used. Default is data/svn_border.geojson",
     )
     parser.add_argument(
         "--save_dir",
@@ -65,13 +72,17 @@ def main() -> None:
     resolution = args.resolution
     start_date = args.date
 
-    collection = DataCollection.SENTINEL2_L1C
+    collection = DataCollection.SENTINEL2_L2A
 
     # load from config file
     config = SHConfig("sentinel-dl")
 
+    geojson_path = Path(args.geojson_path)
+
     # prepare Slovenia map and chunk it into patches of resolution*patch_size m^2
-    _, bbox_list = prepare_slo_chunks(resolution=resolution, patch_size=args.patch_size)
+    _, bbox_list = prepare_chunks(
+        geojson_path=geojson_path, resolution=resolution, patch_size=args.patch_size
+    )
 
     dir_name = start_date.replace(".", "-")
     # prepare workflow

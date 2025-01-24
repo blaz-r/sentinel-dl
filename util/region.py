@@ -7,21 +7,28 @@ from shapely import Polygon
 from tqdm import tqdm
 
 
-def prepare_slo_shape(patch_size=512) -> gpd.geoseries.GeoSeries:
+def prepare_shape(path: Path, buffer: int | None = None) -> gpd.geoseries.GeoSeries:
     """
-    Load Slovenia border geojson and add 512m buffer around it.
+    Load area of interest polygon geojson and add 512m buffer around it.
+
+    Args:
+        path (Path): path to shapefile (geojson)
+        buffer (int | None): buffer around polygon geojson
 
     Returns:
-        (GeoSeries) shape of Slovenia border.
+        (GeoSeries) shape of polygon.
     """
-    slo = gpd.read_file(Path("data/svn_border.geojson"))
-    # add 512m buffer around the border
-    slo = slo.buffer(patch_size)
-    return slo
+    geo = gpd.read_file(path)
+    # in case the crs in file is not projective
+    geo = geo.to_crs(epsg="32633")
+    if buffer is not None:
+        # add specified buffer
+        geo = geo.buffer(buffer)
+    return geo
 
 
-def prepare_slo_chunks(
-    resolution=10, patch_size=512, fixed_meter_patch_size=None
+def prepare_chunks(
+    geojson_path: Path, resolution=10, patch_size=512, fixed_meter_patch_size=None, shape_buffer: int | None = None
 ) -> tuple[gpd.GeoDataFrame, np.ndarray]:
     """
     Prepare bbox chunks of Slovenia for given resolution and patch_size.
@@ -34,22 +41,26 @@ def prepare_slo_chunks(
     which is later set in workflow.
 
     Examples:
-        >>> prepare_slo_chunks(resolution=10, patch_size=512)   # covers 5120 x 5120 m^2 region
+        >>> prepare_slo_chunks(path, resolution=10, patch_size=512)   # covers 5120 x 5120 m^2 region
 
-        >>> prepare_slo_chunks(resolution=20, patch_size=512)   # covers 10240 x 10240 m^2 region
+        >>> prepare_slo_chunks(path, resolution=20, patch_size=512)   # covers 10240 x 10240 m^2 region
 
         # resolution and patch_size ignored
-        >>> prepare_slo_chunks(fixed_meter_patch_size=5120)     # covers 5120 x 5120 m^2 region
+        >>> prepare_slo_chunks(path, fixed_meter_patch_size=5120)     # covers 5120 x 5120 m^2 region
 
     Args:
+        geojson_path (Path): path to geojson file used for region of interest
         resolution: resolution of single pixel in meters
         patch_size: final patch resolution in pixels
         fixed_meter_patch_size (Optional): if you want to specify fixed size of patch in meters
+        shape_buffer (int | None): buffer size that is padded to shape we are processing. If none, use patch_size.
 
     Returns:
         dataframe with polygons and indices + list of bboxes.
     """
-    slo = prepare_slo_shape()
+    if shape_buffer is None:
+        shape_buffer = patch_size
+    shape = prepare_shape(geojson_path, buffer=shape_buffer)
 
     if fixed_meter_patch_size is None:
         meter_size = patch_size * resolution
@@ -62,7 +73,7 @@ def prepare_slo_chunks(
         meter_size = fixed_meter_patch_size
 
     # bboxes with sides in meter sizes, which will then result in patch resolution of patch_size in pixels
-    bbox_splitter = UtmZoneSplitter([slo.geometry.values[0]], slo.crs, meter_size)
+    bbox_splitter = UtmZoneSplitter([shape.geometry.values[0]], shape.crs, meter_size)
 
     bbox_list = np.array(bbox_splitter.get_bbox_list())
     info_list = np.array(bbox_splitter.get_info_list())
@@ -74,7 +85,7 @@ def prepare_slo_chunks(
 
     bbox_gdf = gpd.GeoDataFrame(
         {"index": idxs, "index_x": idxs_x, "index_y": idxs_y},
-        crs=slo.crs,
+        crs=shape.crs,
         geometry=geometry,
     )
 
